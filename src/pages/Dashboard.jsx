@@ -191,16 +191,16 @@ async function cancelTask(t) {
           />
 
           <select name="priority" className="input" defaultValue="medium">
-            <option value="low">mica</option>
-            <option value="medium">medie</option>
-            <option value="high">mare</option>
+            <option value="low">Mica</option>
+            <option value="medium">Medie</option>
+            <option value="high">Mare</option>
           </select>
 
           <select name="recurrence" className="input" defaultValue="none">
-            <option value="none">fără</option>
-            <option value="daily">zilnic</option>
-            <option value="weekly">săptămânal</option>
-            <option value="monthly">lunar</option>
+            <option value="none">Fără</option>
+            <option value="daily">Zilnic</option>
+            <option value="weekly">Săptămânal</option>
+            <option value="monthly">Lunar</option>
           </select>
 
           <button className="primary">Adaugă</button>
@@ -212,11 +212,11 @@ async function cancelTask(t) {
             value={filters.status}
             onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
           >
-            <option value="all">Status: toate</option>
-            <option value="upcoming">upcoming</option>
-            <option value="overdue">overdue</option>
-            <option value="completed">completed</option>
-            <option value="canceled">canceled</option>
+            <option value="all">Status: Toate</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="overdue">Overdue</option>
+            <option value="completed">Completed</option>
+            <option value="canceled">Canceled</option>
           </select>
 
           <select
@@ -224,10 +224,10 @@ async function cancelTask(t) {
             value={filters.priority}
             onChange={e => setFilters(f => ({ ...f, priority: e.target.value }))}
           >
-            <option value="all">Prioritate: toate</option>
-            <option value="low">mica</option>
-            <option value="medium">medie</option>
-            <option value="high">mare</option>
+            <option value="all">Prioritate: Toate</option>
+            <option value="low">Mica</option>
+            <option value="medium">Medie</option>
+            <option value="high">Mare</option>
           </select>
 
           <input
@@ -303,9 +303,9 @@ async function cancelTask(t) {
           className="input"
           defaultValue={editing.priority}
         >
-          <option value="low">low</option>
-          <option value="medium">medium</option>
-          <option value="high">high</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
 
         <select
@@ -313,10 +313,10 @@ async function cancelTask(t) {
           className="input"
           defaultValue={editing.recurrence}
         >
-          <option value="none">fără</option>
-          <option value="daily">zilnic</option>
-          <option value="weekly">săptămânal</option>
-          <option value="monthly">lunar</option>
+          <option value="none">Fără</option>
+          <option value="daily">Zilnic</option>
+          <option value="weekly">Săptămânal</option>
+          <option value="monthly">Lunar</option>
         </select>
 
         <div className="modal-actions">
