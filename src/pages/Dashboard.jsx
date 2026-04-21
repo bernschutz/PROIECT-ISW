@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [loadingTaskId, setLoadingTaskId] = useState(null); // track which task is loading
   const [addingTask, setAddingTask] = useState(false); // track add form loading
   const [savingEdit, setSavingEdit] = useState(false); // track edit form loading
+  const [error, setError] = useState(null); // track errors
 
   function startEdit(t) {
   setEditing(t);
@@ -29,6 +30,7 @@ export default function Dashboard() {
 async function saveEdit(e) {
   e.preventDefault();
   setSavingEdit(true);
+  setError(null);
 
   const f = new FormData(e.currentTarget);
   const updates = {
@@ -39,28 +41,35 @@ async function saveEdit(e) {
     due_at: editDue ? new Date(editDue).toISOString() : null,
   };
 
-  const { error } = await supabase
+  const { error: err } = await supabase
     .from("tasks")
     .update(updates)
     .eq("id", editing.id);
 
   setSavingEdit(false);
-  if (!error) {
+  if (!err) {
     // update instant UI
     setTasks(prev =>
       prev.map(t => t.id === editing.id ? { ...t, ...updates } : t)
     );
     setEditing(null);
+  } else {
+    setError(err.message);
+    setTimeout(() => setError(null), 5000);
   }
 }
 
 
   async function load() {
-    const { data, error } = await supabase
+    const { data, error: err } = await supabase
       .from("tasks")
       .select("*")
       .order("created_at", { ascending: false });
-    if (!error) setTasks((data || []).map(t => ({ ...t, status: computeStatus(t) })));
+    if (!err) setTasks((data || []).map(t => ({ ...t, status: computeStatus(t) })));
+    else {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
   }
 
   useEffect(() => {
@@ -86,6 +95,7 @@ const ch = supabase
   async function addTask(e) {
     e.preventDefault();
     setAddingTask(true);
+    setError(null);
     const f = new FormData(e.currentTarget);
     const obj = {
       title: f.get("title"),
@@ -95,17 +105,21 @@ const ch = supabase
       recurrence: f.get("recurrence"),
       user_id: session.user.id,
     };
-    const { error, data } = await supabase.from("tasks").insert(obj).select().single();
+    const { error: err, data } = await supabase.from("tasks").insert(obj).select().single();
     setAddingTask(false);
-    if (!error && data) {
+    if (!err && data) {
       setTasks(prev => [data, ...prev]);
       e.currentTarget.reset();
       setDueAt(null); // reset date-time picker
+    } else if (err) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
     }
   }
 
 async function toggleComplete(t) {
   setLoadingTaskId(t.id);
+  setError(null);
   let newStatus;
 
   if (t.status === "completed") {
@@ -121,7 +135,7 @@ async function toggleComplete(t) {
   if (newStatus === "completed" && t.recurrence !== "none") {
     const due = nextDue(t.due_at, t.recurrence);
     if (due) {
-      await supabase.from("tasks").insert({
+      const { error: err } = await supabase.from("tasks").insert({
         user_id: t.user_id,
         title: t.title,
         description: t.description,
@@ -129,10 +143,22 @@ async function toggleComplete(t) {
         due_at: due.toISOString(),
         recurrence: t.recurrence,
       });
+      if (err) {
+        setError(err.message);
+        setLoadingTaskId(null);
+        setTimeout(() => setError(null), 5000);
+        return;
+      }
     }
   }
 
-  await supabase.from("tasks").update(updates).eq("id", t.id);
+  const { error: err } = await supabase.from("tasks").update(updates).eq("id", t.id);
+  if (err) {
+    setError(err.message);
+    setLoadingTaskId(null);
+    setTimeout(() => setError(null), 5000);
+    return;
+  }
 
   // force refresh
   await load();
@@ -145,15 +171,20 @@ async function delTask(id) {
   if (!ok) return;
 
   setLoadingTaskId(id);
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
+  setError(null);
+  const { error: err } = await supabase.from("tasks").delete().eq("id", id);
 
   setLoadingTaskId(null);
-  if (!error) {
+  if (!err) {
     setTasks(prev => prev.filter(t => t.id !== id));
+  } else {
+    setError(err.message);
+    setTimeout(() => setError(null), 5000);
   }
 }
 async function cancelTask(t) {
   setLoadingTaskId(t.id);
+  setError(null);
   // dacă e deja canceled → revenim la statusul normal
   const newStatus =
     t.status === "canceled"
@@ -161,19 +192,22 @@ async function cancelTask(t) {
       : "canceled";
 
   // update în DB
-  const { error } = await supabase
+  const { error: err } = await supabase
     .from("tasks")
     .update({ status: newStatus })
     .eq("id", t.id);
 
   setLoadingTaskId(null);
-  if (!error) {
+  if (!err) {
     // update instant în UI
     setTasks(prev =>
       prev.map(x =>
         x.id === t.id ? { ...x, status: newStatus } : x
       )
     );
+  } else {
+    setError(err.message);
+    setTimeout(() => setError(null), 5000);
   }
 }
 
@@ -189,6 +223,11 @@ async function cancelTask(t) {
 
   return (
     <div className="wrap">
+      {error && (
+        <div style={{ background: "#9b2b2b", color: "white", padding: "12px 16px", borderRadius: "4px", marginBottom: "12px", fontSize: "0.9rem" }}>
+          {error}
+        </div>
+      )}
       <div className="card">
         <form className="add" onSubmit={addTask}>
           <input name="title" className="input" placeholder="Titlu" required />
@@ -251,20 +290,25 @@ async function cancelTask(t) {
         </div>
       </div>
 
-      <ul className="list">
-        {filtered.map(t => (
-          <li key={t.id} className={clsx("item", computeStatus(t))}>
-            <div className="title">{t.title}</div>
-            <div className="meta">
-              <span>{capitalize(t.priority)}</span>
-              {t.due_at && (
-                <span>
-                  Due: {format(new Date(t.due_at), "dd/MM/yyyy HH:mm", { locale: ro })}
-                </span>
-              )}
-              <span className={`badge ${computeStatus(t)}`}>{capitalize(computeStatus(t))}</span>
-            </div>
-            <p className="desc">{t.description}</p>
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px 20px", opacity: 0.6 }}>
+          <p>No tasks found</p>
+        </div>
+      ) : (
+        <ul className="list">
+          {filtered.map(t => (
+            <li key={t.id} className={clsx("item", computeStatus(t))}>
+              <div className="title">{t.title}</div>
+              <div className="meta">
+                <span>{capitalize(t.priority)}</span>
+                {t.due_at && (
+                  <span>
+                    Due: {format(new Date(t.due_at), "dd/MM/yyyy HH:mm", { locale: ro })}
+                  </span>
+                )}
+                <span className={`badge ${computeStatus(t)}`}>{capitalize(computeStatus(t))}</span>
+              </div>
+              <p className="desc">{t.description}</p>
 <div className="actions">
   <button onClick={() => toggleComplete(t)} disabled={loadingTaskId === t.id}>
     {loadingTaskId === t.id ? "..." : (t.status === "completed" ? "Undo" : "Complete")}
@@ -282,9 +326,10 @@ async function cancelTask(t) {
 </div>
 
 
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
       {editing && (
   <div className="modal-backdrop">
     <div className="modal">
