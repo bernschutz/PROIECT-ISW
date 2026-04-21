@@ -1,7 +1,5 @@
-/* ---------- 3rd-party styles ---------- */
 @import "flatpickr/dist/flatpickr.min.css";
 
-/* ========== THEME TOKENS ========== */
 :root {
   --bg: #f6f8fc;
   --text: #0b1220;
@@ -289,24 +287,7 @@ button.danger { border-color: #b94; color: #fff; background: #b44; }
 .flatpickr-time .flatpickr-am-pm {
   color: var(--text) !important;
 }
-/* -------- POPUP IMAGE -------- */
-.popup-container {
-  position: fixed;
-  bottom: -10px;
-  right: 20px;
-  z-index: 9999;
-}
 
-.popup {
-  position: relative;
-  animation: rise 1s ease-out forwards;
-  transform: translateY(40px);
-}
-
-.popup img {
-  max-width: 300px;
-  border-radius: 12px;
-}
 
 .close-btn {
   position: absolute;
@@ -324,10 +305,4 @@ button.danger { border-color: #b94; color: #fff; background: #b44; }
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(40px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
