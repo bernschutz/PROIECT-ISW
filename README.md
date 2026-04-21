@@ -1,16 +1,34 @@
-# React + Vite
+# 📝 To-Do App (React + Supabase)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicație web modernă de tip To-Do, construită cu **React (Vite)** și **Supabase**, care permite utilizatorilor să își gestioneze sarcinile într-un mod eficient și intuitiv.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Funcționalități
 
-## React Compiler
+- 🔐 Autentificare (Sign In / Sign Up) cu email și parolă
+- ➕ Adăugare task-uri
+- 📝 Editare task-uri existente
+- ❌ Ștergere task-uri
+- 📅 Setare dată limită (date picker)
+- 🔁 Task-uri recurente (daily / weekly / monthly)
+- ⚡ Actualizare în timp real (Supabase Realtime)
+- 🎯 Filtrare după:
+  - status (completed / upcoming / overdue)
+  - prioritate (low / medium / high)
+- 🔍 Căutare task-uri
+- 🌗 Dark / Light mode
+- 🧪 Teste unitare cu Vitest
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tehnologii folosite
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- ⚛️ React 19
+- ⚡ Vite
+- 🧭 React Router
+- 🟢 Supabase (Auth + Database + Realtime)
+- 📅 Flatpickr (date picker)
+- 📆 date-fns
+- 🎨 CSS modern + UI custom
+- 🧪 Vitest + Testing Library
