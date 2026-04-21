@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const THEME_KEY = "theme"; // 'light' | 'dark'
+const THEME_KEY = "theme";
 
 function getInitialTheme() {
   const saved = localStorage.getItem(THEME_KEY);
