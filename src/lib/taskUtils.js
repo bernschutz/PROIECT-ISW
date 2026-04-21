@@ -1,5 +1,9 @@
 import { isBefore, startOfMinute, addDays, addWeeks, addMonths } from "date-fns";
 
+export function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export function computeStatus(task) {
   if (task.status === "completed" || task.status === "canceled") return task.status;
   if (task.due_at && isBefore(new Date(task.due_at), startOfMinute(new Date()))) return "overdue";

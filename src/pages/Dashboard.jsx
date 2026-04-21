@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { computeStatus, nextDue } from "../lib/taskUtils";
+import { computeStatus, nextDue, capitalize } from "../lib/taskUtils";
 import clsx from "clsx";
-import React from "react";
 
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
@@ -18,6 +17,9 @@ export default function Dashboard() {
   const [dueAt, setDueAt] = useState(null); // pentru Flatpickr
   const [editing, setEditing] = useState(null); // task-ul pe care îl edităm
   const [editDue, setEditDue] = useState(null); // pentru Flatpickr în modal
+  const [loadingTaskId, setLoadingTaskId] = useState(null); // track which task is loading
+  const [addingTask, setAddingTask] = useState(false); // track add form loading
+  const [savingEdit, setSavingEdit] = useState(false); // track edit form loading
 
   function startEdit(t) {
   setEditing(t);
@@ -26,6 +28,7 @@ export default function Dashboard() {
 
 async function saveEdit(e) {
   e.preventDefault();
+  setSavingEdit(true);
 
   const f = new FormData(e.currentTarget);
   const updates = {
@@ -41,6 +44,7 @@ async function saveEdit(e) {
     .update(updates)
     .eq("id", editing.id);
 
+  setSavingEdit(false);
   if (!error) {
     // update instant UI
     setTasks(prev =>
@@ -81,6 +85,7 @@ const ch = supabase
 
   async function addTask(e) {
     e.preventDefault();
+    setAddingTask(true);
     const f = new FormData(e.currentTarget);
     const obj = {
       title: f.get("title"),
@@ -91,6 +96,7 @@ const ch = supabase
       user_id: session.user.id,
     };
     const { error, data } = await supabase.from("tasks").insert(obj).select().single();
+    setAddingTask(false);
     if (!error && data) {
       setTasks(prev => [data, ...prev]);
       e.currentTarget.reset();
@@ -99,6 +105,7 @@ const ch = supabase
   }
 
 async function toggleComplete(t) {
+  setLoadingTaskId(t.id);
   let newStatus;
 
   if (t.status === "completed") {
@@ -129,6 +136,7 @@ async function toggleComplete(t) {
 
   // force refresh
   await load();
+  setLoadingTaskId(null);
 }
 
 
@@ -136,13 +144,16 @@ async function delTask(id) {
   const ok = window.confirm("Ești sigur că vrei să ștergi task-ul?");
   if (!ok) return;
 
+  setLoadingTaskId(id);
   const { error } = await supabase.from("tasks").delete().eq("id", id);
 
+  setLoadingTaskId(null);
   if (!error) {
     setTasks(prev => prev.filter(t => t.id !== id));
   }
 }
 async function cancelTask(t) {
+  setLoadingTaskId(t.id);
   // dacă e deja canceled → revenim la statusul normal
   const newStatus =
     t.status === "canceled"
@@ -155,6 +166,7 @@ async function cancelTask(t) {
     .update({ status: newStatus })
     .eq("id", t.id);
 
+  setLoadingTaskId(null);
   if (!error) {
     // update instant în UI
     setTasks(prev =>
@@ -203,7 +215,7 @@ async function cancelTask(t) {
             <option value="monthly">Lunar</option>
           </select>
 
-          <button className="primary">Adaugă</button>
+          <button className="primary" disabled={addingTask}>{addingTask ? "Se adaugă..." : "Adaugă"}</button>
         </form>
 
         <div className="filters">
@@ -244,27 +256,29 @@ async function cancelTask(t) {
           <li key={t.id} className={clsx("item", computeStatus(t))}>
             <div className="title">{t.title}</div>
             <div className="meta">
-              <span>{t.priority}</span>
+              <span>{capitalize(t.priority)}</span>
               {t.due_at && (
                 <span>
-                  due: {format(new Date(t.due_at), "dd/MM/yyyy HH:mm", { locale: ro })}
+                  Due: {format(new Date(t.due_at), "dd/MM/yyyy HH:mm", { locale: ro })}
                 </span>
               )}
-              <span className={`badge ${computeStatus(t)}`}>{computeStatus(t)}</span>
+              <span className={`badge ${computeStatus(t)}`}>{capitalize(computeStatus(t))}</span>
             </div>
             <p className="desc">{t.description}</p>
 <div className="actions">
-  <button onClick={() => toggleComplete(t)}>
-    {t.status === "completed" ? "Undo" : "Complete"}
+  <button onClick={() => toggleComplete(t)} disabled={loadingTaskId === t.id}>
+    {loadingTaskId === t.id ? "..." : (t.status === "completed" ? "Undo" : "Complete")}
   </button>
 
-  <button onClick={() => cancelTask(t)}>
-    {t.status === "canceled" ? "Uncancel" : "Cancel"}
+  <button onClick={() => cancelTask(t)} disabled={loadingTaskId === t.id}>
+    {loadingTaskId === t.id ? "..." : (t.status === "canceled" ? "Uncancel" : "Cancel")}
   </button>
 
-  <button onClick={() => startEdit(t)}>Edit</button>
+  <button onClick={() => startEdit(t)} disabled={loadingTaskId === t.id}>Edit</button>
 
-  <button onClick={() => delTask(t.id)}>Delete</button>
+  <button onClick={() => delTask(t.id)} disabled={loadingTaskId === t.id}>
+    {loadingTaskId === t.id ? "..." : "Delete"}
+  </button>
 </div>
 
 
@@ -320,11 +334,11 @@ async function cancelTask(t) {
         </select>
 
         <div className="modal-actions">
-          <button type="button" className="ghost" onClick={() => setEditing(null)}>
+          <button type="button" className="ghost" onClick={() => setEditing(null)} disabled={savingEdit}>
             Închide
           </button>
-          <button type="submit" className="primary">
-            Salvează
+          <button type="submit" className="primary" disabled={savingEdit}>
+            {savingEdit ? "Se salvează..." : "Salvează"}
           </button>
         </div>
 

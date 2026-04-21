@@ -2,7 +2,6 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useTheme } from "../lib/useTheme";
-import React from "react";
 
 export default function App() {
   const [session, setSession] = useState(null);

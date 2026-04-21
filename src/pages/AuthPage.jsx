@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import React from "react";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("signIn"); // 'signIn' | 'signUp'
